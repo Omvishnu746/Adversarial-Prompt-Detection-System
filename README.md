@@ -666,7 +666,7 @@ If you use PromptGuard in your research, please cite:
 ```bibtex
 @software{promptguard2026,
   title     = {PromptGuard: A Multi-Layered Adversarial Prompt Detection System},
-  author    = {Omvishnu746},
+  author    = {Omvishnu746},{DivyanshRana07}, 
   year      = {2026},
   url       = {https://github.com/Omvishnu746/Adversarial-Prompt-Detection-System},
   note      = {Multi-model ensemble system for LLM security}
