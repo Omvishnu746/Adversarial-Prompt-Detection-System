@@ -1,36 +1,16 @@
-## Novelty & Innovation
+# Adversarial Prompt Detection System
 
-- Innovation 1 (Tier-1 Fast Reject): SBERT semantic cache layer with sub-10ms cosine-similarity matching against vector database
-- Innovation 2 (Sliding-Window Inference): Single fine-tuned DistilBERT model with overlapping chunk slicing for long prompts
-- Innovation 3 (Decoupled Explainability): Asynchronous SHAP, LIME, and attention attribution running as background workers
-- Innovation 4 (Stratified Dataset): Mathematically balanced dataset with rare edge cases like Base64 obfuscation and URL indirecting
+## Architectural Pivot
 
-## System Architecture
+In this iteration, we have pivoted towards an ultra-low latency inline firewall architecture, aiming for response times below 50ms. This requires significant optimization and innovation in our design principles to ensure efficiency and effectiveness in real-time scenarios.
 
-```
-Tier 1: Fast Reject Layer (Regex + SBERT Semantic Cache)
-Tier 2: Tokenization & Chunking (Sliding Window Tokenizer)
-Tier 3: Inference Engine (DistilBERT evaluates chunks)
-Tier 4: Decision Router (Block if ANY chunk malicious)
-Tier 5: Async Logging & Explainability (background workers)
-```
+### Key Features:
+- **Tier-1 Fast Reject**: This feature will allow our system to swiftly identify and reject adversarial inputs without processing them through the entire system, enhancing the overall speed.
+- **Sliding-Window Inference**: By adopting this approach, we can analyze data in chunks, enabling rapid decision-making while maintaining accuracy and robustness against diverse adversarial attacks.
+- **Decoupled Explainability**: We aim to provide clear insights into our decision-making process, ensuring that our system's operations are transparent and understandable, which is crucial for trust and reliability in security applications.
 
-## Technical Specification
+## Dataset Specifications
 
-| Model           | Description                                  |
-|----------------|----------------------------------------------|
-| DistilBERT     | inference                                   |
-| SBERT          | caching                                     |
-
-## Dataset Description
-
-- Change structure from CSV to JSON schema format  
-- Total: 12,032 rows (60% Benign: 7,175 rows, 40% Attacks: 4,858 rows)  
-- Attacks perfectly balanced 1:1 between Jailbreaks (2,429) and Prompt Injections (2,429)  
-- Data sources: databricks/databricks-dolly-15k (Benign), JailbreakBench, lmsys/toxic-chat, PKU-SafeRLHF-QA (Jailbreaks), and deepset, neuralchemy, wambosec (Prompt Injections)  
-
-## Core Features
-
-- Tier-1 Fast Reject  
-- Sliding-Window Inference  
-- Decoupled Explainability  
+We have updated our dataset to better reflect real-world scenarios and enhance the training of our models, focusing on diverse adversarial examples. This includes:
+- Increased dataset variety to cover more potential adversarial tactics.
+- Continuous updating and augmentation of data to ensure relevance and efficiency in detection capabilities.
