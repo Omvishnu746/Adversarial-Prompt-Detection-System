@@ -1,16 +1,44 @@
 # Adversarial Prompt Detection System
 
-## Architectural Pivot
+## Architectural Overview  
 
-In this iteration, we have pivoted towards an ultra-low latency inline firewall architecture, aiming for response times below 50ms. This requires significant optimization and innovation in our design principles to ensure efficiency and effectiveness in real-time scenarios.
+Introducing the complete architectural pivot of our system! 🚀  
 
-### Key Features:
-- **Tier-1 Fast Reject**: This feature will allow our system to swiftly identify and reject adversarial inputs without processing them through the entire system, enhancing the overall speed.
-- **Sliding-Window Inference**: By adopting this approach, we can analyze data in chunks, enabling rapid decision-making while maintaining accuracy and robustness against diverse adversarial attacks.
-- **Decoupled Explainability**: We aim to provide clear insights into our decision-making process, ensuring that our system's operations are transparent and understandable, which is crucial for trust and reliability in security applications.
+### Tier-1: Fast Reject  
+- Utilizes the SBERT semantic cache for sub-10ms matching, ensuring that only relevant inputs are processed swiftly. ⚡  
 
-## Dataset Specifications
+### Tier-2: Sliding-Window Inference  
+- Implements DistilBERT for contextual analysis, processing inputs in a sliding-window fashion to capture nuanced adversarial patterns. 🔍  
 
-We have updated our dataset to better reflect real-world scenarios and enhance the training of our models, focusing on diverse adversarial examples. This includes:
-- Increased dataset variety to cover more potential adversarial tactics.
-- Continuous updating and augmentation of data to ensure relevance and efficiency in detection capabilities.
+### Tier-3: Decoupled Explainability  
+- Features asynchronous background workers for explainability, allowing us to analyze model decisions without impacting throughput. 📊  
+
+### Dataset  
+- A stratified dataset comprising **12,032 rows**:  
+  - **7,175 benign (60%)**  
+  - **4,858 attacks (40%)**  
+  - Perfectly balanced with a **1:1** ratio of jailbreaks vs prompt injections. 🗃️  
+- Data in **JSON schema format** for easy consumption and integration.  
+
+### Updated Models Table  
+- Currently only supporting:  
+  - **DistilBERT**  
+  - **SBERT**  
+
+### Architecture Diagram  
+- A sequential **5-tier pipeline architecture diagram** illustrating the flow of data and decision logic. 🏗️  
+
+### Updated Data Sources  
+- Integrates data from diverse sources like:  
+  - databricks-dolly-15k  
+  - JailbreakBench  
+  - lmsys/toxic-chat  
+  - PKU-SafeRLHF-QA  
+  - deepset  
+  - neuralchemy  
+  - wambosec  
+
+### Performance Targets  
+- Target latency of **<50ms** for rapid adversarial detection. ⏱️  
+
+Maintain professional markdown formatting throughout the document. 💼  
