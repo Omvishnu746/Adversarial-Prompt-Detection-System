@@ -1,0 +1,19 @@
+# PromptGuard Phase 1 – Python Dependencies
+# Do NOT add transformers / torch / sentence-transformers here.
+# Those belong in Phase 2 (SBERT) and Phase 3 (DistilBERT).
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+
+# ── Data validation ───────────────────────────────────────────────────────────
+pydantic>=2.7.0
+
+# ── Config ────────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Regex (PCRE2 compatible) ──────────────────────────────────────────────────
+regex>=2024.4.16
+
+# ── CLI progress bar (used in preprocess_dataset.py) ─────────────────────────
+tqdm>=4.66.0
