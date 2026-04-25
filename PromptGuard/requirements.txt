@@ -1,6 +1,7 @@
 # PromptGuard Phase 1 – Python Dependencies
-# Do NOT add transformers / torch / sentence-transformers here.
-# Those belong in Phase 2 (SBERT) and Phase 3 (DistilBERT).
+# Do NOT add transformers / torch / sentence-transformers here arbitrarily.
+# Phase 2 (SBERT) dependencies are listed below in their own section.
+# Phase 3 (DistilBERT) belongs in a future requirements-phase3.txt.
 
 # ── Web framework ─────────────────────────────────────────────────────────────
 fastapi>=0.111.0
@@ -15,5 +16,27 @@ python-dotenv>=1.0.0
 # ── Regex (PCRE2 compatible) ──────────────────────────────────────────────────
 regex>=2024.4.16
 
-# ── CLI progress bar (used in preprocess_dataset.py) ─────────────────────────
+# ── CLI progress bar (used in preprocess_dataset.py and build scripts) ────────
 tqdm>=4.66.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 2 – SBERT Semantic Similarity Layer
+# ─────────────────────────────────────────────────────────────────────────────
+# ⚠️  Install these ONLY when GPU (or sufficient CPU RAM) is available.
+# ⚠️  These are NOT required for Phase 1 to run.
+#
+# To install Phase 2 deps:
+#   pip install sentence-transformers faiss-cpu numpy
+#
+# If GPU is available, replace faiss-cpu with faiss-gpu:
+#   pip install faiss-gpu
+
+# SBERT – encodes prompts to dense semantic embeddings
+sentence-transformers>=2.7.0
+
+# FAISS – efficient approximate nearest-neighbour search
+# CPU version (replace with faiss-gpu when GPU becomes available)
+faiss-cpu>=1.8.0
+
+# NumPy – vector maths and .npy serialisation
+numpy>=1.26.0

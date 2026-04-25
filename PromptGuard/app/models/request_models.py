@@ -1,9 +1,17 @@
 """
 PromptGuard – Pydantic request / response models.
+
+Phase 2 update:
+  • PromptResponse.triggered_layer now accepts "semantic".
+  • PromptResponse gains an optional ``semantic_result`` field that carries
+    the SemanticResponse payload when the semantic engine is active.
 """
 
+from typing import Literal, Optional
+
 from pydantic import BaseModel, Field
-from typing import Literal
+
+from app.models.semantic_response import SemanticResponse
 
 
 class PromptRequest(BaseModel):
@@ -30,7 +38,14 @@ class PromptResponse(BaseModel):
         ...,
         description="Final routing decision based on risk score.",
     )
-    triggered_layer: Literal["rule", "none"] = Field(
+    triggered_layer: Literal["rule", "semantic", "none"] = Field(
         ...,
         description="Which detection layer triggered the decision.",
+    )
+    semantic_result: Optional[SemanticResponse] = Field(
+        default=None,
+        description=(
+            "Semantic similarity check details (Phase 2). "
+            "None when the semantic engine is not initialised."
+        ),
     )

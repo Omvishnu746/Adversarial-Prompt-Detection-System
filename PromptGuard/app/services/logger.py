@@ -4,13 +4,15 @@ PromptGuard – Structured JSON Logger
 Writes one JSON object per line to logs/promptguard.log.
 Each entry is human-readable and machine-parseable.
 
-Log schema:
+Log schema (Phase 2 update):
   {
     "timestamp":       ISO-8601 UTC string,
     "prompt":          first 200 chars of the original prompt,
     "risk_score":      float 0.0–1.0,
     "decision":        "ALLOW" | "BLOCK",
-    "triggered_layer": "rule" | "none"
+    "triggered_layer": "rule" | "semantic" | "none",
+    "semantic_score":  float 0.0–1.0 | null,
+    "semantic_match":  bool | null
   }
 """
 
@@ -61,6 +63,8 @@ def log_request(
     risk_score: float,
     decision: str,
     triggered_layer: str,
+    semantic_score: float | None = None,
+    semantic_match: bool | None = None,
 ) -> None:
     """
     Append a structured JSON log entry for a single /check_prompt request.
@@ -69,7 +73,9 @@ def log_request(
         prompt:          Raw user prompt (truncated to 200 chars in the log).
         risk_score:      Final risk score assigned to the prompt.
         decision:        "ALLOW" or "BLOCK".
-        triggered_layer: "rule" or "none".
+        triggered_layer: "rule", "semantic", or "none".
+        semantic_score:  Cosine similarity score from Phase 2 (None = engine off).
+        semantic_match:  Whether the semantic layer triggered (None = engine off).
     """
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -77,5 +83,7 @@ def log_request(
         "risk_score": round(risk_score, 4),
         "decision": decision,
         "triggered_layer": triggered_layer,
+        "semantic_score": round(semantic_score, 4) if semantic_score is not None else None,
+        "semantic_match": semantic_match,
     }
     _logger.info(json.dumps(entry, ensure_ascii=False))
