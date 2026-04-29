@@ -129,7 +129,16 @@ def main() -> None:
     # ── Step 3: Save index ────────────────────────────────────────────────────
     print("\n[3/3] Saving FAISS index …")
     saved_path = save_faiss_index(index, output_path=output_path)
-    print(f"  Saved → {saved_path}")
+    print(f"  Saved at {saved_path}")
+
+    metadata_path = output_path.parent / "index_metadata.json"
+    import json
+    with open(metadata_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "embedding_dimension": int(embeddings.shape[1]),
+            "vector_count": int(index.ntotal)
+        }, f, indent=4)
+    print(f"  Saved metadata → {metadata_path}")
 
     print("\n" + "=" * 60)
     print("  ✅  FAISS index built successfully.")

@@ -46,7 +46,7 @@ logger = logging.getLogger("promptguard.semantic_engine")
 # ── Configuration constants ───────────────────────────────────────────────────
 
 # Similarity threshold above which a prompt is flagged as matching a known attack.
-SEMANTIC_MATCH_THRESHOLD: float = 0.90
+SEMANTIC_MATCH_THRESHOLD: float = 0.65
 
 # top_k nearest neighbours to retrieve from FAISS (1 for single best match).
 TOP_K: int = 1

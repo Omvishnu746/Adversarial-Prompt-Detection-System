@@ -106,8 +106,13 @@ def load_malicious_prompts(dataset_path: Path) -> list[str]:
                 continue
             total += 1
             record = json.loads(line)
-            if record.get("binary_label", 0) == 1:
-                text = record.get("text", "").strip()
+            
+            # Use attack_labels['is_benign'] == 0 as the malicious indicator
+            attack_labels = record.get("attack_labels", {})
+            is_malicious = attack_labels.get("is_benign", 1) == 0
+            # Some versions might have binary_label explicitly
+            if record.get("binary_label") == 1 or is_malicious:
+                text = record.get("prompt_cleaned", record.get("text", "")).strip()
                 if text:
                     malicious.append(text)
 
@@ -115,44 +120,79 @@ def load_malicious_prompts(dataset_path: Path) -> list[str]:
     return malicious
 
 
-def build_embeddings(texts: list[str], batch_size: int = 64):
+def build_embeddings(texts: list[str], batch_size: int = 16, checkpoint_dir: Path = None):
     """
     Encode a list of texts using SBERT and return an L2-normalised numpy array.
-
-    ⚠️  This function loads the SBERT model. Run ONLY when GPU is available.
-
-    Args:
-        texts:      List of prompt strings to encode.
-        batch_size: Encoding batch size (increase for faster GPU throughput).
-
-    Returns:
-        A (N, 384) float32 numpy array of L2-normalised embeddings.
+    Supports checkpointing every 500 prompts and tqdm progress bar.
     """
-    # Deferred imports – these will fail if sentence-transformers is not installed.
-    # That is intentional; the error message guides the user to install it first.
     from app.services.embedding_model import load_embedding_model, generate_embeddings_batch
+    import numpy as np
+    from tqdm import tqdm
+    import os
 
-    print("  Loading SBERT model (sentence-transformers/all-MiniLM-L6-v2) …")
+    print("  Loading SBERT model (sentence-transformers/all-MiniLM-L6-v2) on CPU …")
     load_embedding_model()
 
     print(f"  Encoding {len(texts):,} prompts with batch_size={batch_size} …")
-    embeddings = generate_embeddings_batch(texts)   # shape (N, 384), L2-normalised
-    return embeddings
+    
+    if checkpoint_dir is None:
+        checkpoint_dir = Path("data/embeddings")
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    
+    checkpoint_file = checkpoint_dir / "checkpoint_embeddings.npy"
+    progress_file = checkpoint_dir / "checkpoint_progress.txt"
+    
+    start_idx = 0
+    all_embeddings = []
+    
+    if checkpoint_file.exists() and progress_file.exists():
+        with open(progress_file, "r") as f:
+            start_idx = int(f.read().strip())
+        all_embeddings = list(np.load(str(checkpoint_file)))
+        print(f"  Resuming from checkpoint at index {start_idx}...")
+
+    chunk_size = 500
+    for i in tqdm(range(start_idx, len(texts), chunk_size), desc="Generating Embeddings", unit="chunk"):
+        chunk_texts = texts[i : i + chunk_size]
+        chunk_embeddings = generate_embeddings_batch(chunk_texts)
+        all_embeddings.extend(chunk_embeddings)
+        
+        # Save checkpoint
+        np.save(str(checkpoint_file), np.array(all_embeddings, dtype=np.float32))
+        with open(progress_file, "w") as f:
+            f.write(str(i + len(chunk_texts)))
+
+    final_embeddings = np.array(all_embeddings, dtype=np.float32)
+    # Cleanup checkpoints
+    if checkpoint_file.exists():
+        os.remove(checkpoint_file)
+    if progress_file.exists():
+        os.remove(progress_file)
+
+    return final_embeddings
 
 
 def main() -> None:
     """
     End-to-end script: load data → encode → save.
-
-    ⚠️  DO NOT RUN UNTIL GPU IS AVAILABLE.
     """
     import numpy as np
+    import time
+    import logging
     from app.config.settings import PROCESSED_DATASET_PATH, EMBEDDINGS_PATH
 
     args = parse_args()
 
     dataset_path: Path = args.dataset or Path(PROCESSED_DATASET_PATH)
     output_path: Path = args.output or Path(EMBEDDINGS_PATH)
+    
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    logging.basicConfig(
+        filename=log_dir / "embedding_generation.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s"
+    )
 
     print("=" * 60)
     print("  PromptGuard – Phase 2: Build Attack Embeddings")
@@ -161,17 +201,21 @@ def main() -> None:
     print(f"  Output  : {output_path}")
     print("=" * 60)
 
+    logging.info("Embedding generation started.")
+    start_time = time.time()
+
     # ── Step 1: Load malicious prompts ────────────────────────────────────────
     print("\n[1/3] Loading malicious prompts from dataset …")
     malicious_prompts = load_malicious_prompts(dataset_path)
 
     if not malicious_prompts:
-        print("  ⚠️  No malicious records found. Check binary_label field.")
+        print("  WARNING: No malicious records found. Check binary_label field.")
         sys.exit(1)
 
     # ── Step 2: Generate embeddings ───────────────────────────────────────────
     print("\n[2/3] Generating SBERT embeddings …")
-    embeddings = build_embeddings(malicious_prompts, batch_size=args.batch)
+    checkpoint_dir = output_path.parent
+    embeddings = build_embeddings(malicious_prompts, batch_size=16, checkpoint_dir=checkpoint_dir)
     print(f"  Embedding matrix shape: {embeddings.shape}")
 
     # ── Step 3: Save to disk ──────────────────────────────────────────────────
@@ -179,20 +223,20 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     np.save(str(output_path), embeddings)
     print(f"  Saved → {output_path}")
+    
+    elapsed_time = time.time() - start_time
+    logging.info(f"Completion time: {elapsed_time:.2f} seconds.")
+    logging.info(f"Total processed prompts: {len(malicious_prompts)}.")
+    logging.info("Embedding generation completed successfully.")
 
     print("\n" + "=" * 60)
-    print("  ✅  Embeddings built successfully.")
+    print("  SUCCESS: Embeddings built successfully.")
     print(f"      Vectors : {embeddings.shape[0]:,}")
     print(f"      Dimension: {embeddings.shape[1]}")
+    print(f"      Elapsed Time: {elapsed_time:.2f} seconds")
     print("=" * 60)
     print("\nNext step: run  python scripts/build_faiss_index.py")
 
 
-# ── Entry point ───────────────────────────────────────────────────────────────
-# The `if __name__ == "__main__"` guard prevents automatic execution when this
-# module is imported during testing or by other modules.
-
 if __name__ == "__main__":
-    # ⚠️  Run ONLY when GPU becomes available.
-    # Comment: "Run this only when GPU becomes available."
     main()

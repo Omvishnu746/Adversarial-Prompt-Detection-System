@@ -11,6 +11,16 @@ from app.routes.check_prompt import router as prompt_router
 
 # ── App factory ───────────────────────────────────────────────────────────────
 
+from contextlib import asynccontextmanager
+from app.services.semantic_engine import initialise_semantic_engine
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialise the semantic engine on startup
+    initialise_semantic_engine()
+    yield
+    # Cleanup on shutdown (if any)
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title=API_TITLE,
@@ -18,6 +28,7 @@ def create_app() -> FastAPI:
         description=API_DESCRIPTION,
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
 
     # CORS – open in Phase 1, tighten in production

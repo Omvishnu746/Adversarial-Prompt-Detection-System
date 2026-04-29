@@ -61,8 +61,9 @@ def load_embedding_model() -> None:
         # at import time (it is optional until Phase 2 is activated).
         from sentence_transformers import SentenceTransformer  # noqa: PLC0415
 
-        logger.info("Loading SBERT model: %s", SBERT_MODEL_NAME)
-        _model = SentenceTransformer(SBERT_MODEL_NAME)
+        logger.info("Loading SBERT model: %s on CPU", SBERT_MODEL_NAME)
+        _model = SentenceTransformer(SBERT_MODEL_NAME, device='cpu')
+        _model.max_seq_length = 128
         logger.info(
             "SBERT model loaded successfully. Embedding dimension: %d", EMBEDDING_DIM
         )
@@ -148,8 +149,8 @@ def generate_embeddings_batch(texts: list[str]) -> np.ndarray:
         texts,
         convert_to_numpy=True,
         normalize_embeddings=True,
-        show_progress_bar=True,   # useful for the build_embeddings.py script
-        batch_size=64,
+        show_progress_bar=False,  # We will handle progress bar in the build script
+        batch_size=16,
     )
 
     return embeddings.astype(np.float32)

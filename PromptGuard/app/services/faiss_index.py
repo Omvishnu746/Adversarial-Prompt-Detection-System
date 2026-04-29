@@ -30,7 +30,7 @@ logger = logging.getLogger("promptguard.faiss_index")
 # time, but the files themselves are not opened until load_faiss_index() is
 # called explicitly.
 
-_PACKAGE_ROOT = Path(__file__).resolve().parents[3]          # .../promptguard/
+_PACKAGE_ROOT = Path(__file__).resolve().parents[2]          # .../promptguard/
 FAISS_INDEX_PATH: Path = _PACKAGE_ROOT / "data" / "embeddings" / "faiss_index.bin"
 ATTACK_EMBEDDINGS_PATH: Path = _PACKAGE_ROOT / "data" / "embeddings" / "attack_embeddings.npy"
 
@@ -115,7 +115,7 @@ def save_faiss_index(index: object, output_path: Optional[Path] = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
 
     faiss.write_index(index, str(path))  # type: ignore[arg-type]
-    logger.info("FAISS index saved → %s  (%d vectors)", path, index.ntotal)  # type: ignore[attr-defined]
+    logger.info("FAISS index saved at %s  (%d vectors)", path, index.ntotal)  # type: ignore[attr-defined]
     return path
 
 
