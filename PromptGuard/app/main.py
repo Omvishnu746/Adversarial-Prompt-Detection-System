@@ -45,7 +45,14 @@ def create_app() -> FastAPI:
     # ── Health check ──────────────────────────────────────────────────────────
     @app.get("/health", tags=["System"])
     async def health() -> dict:
-        return {"status": "ok", "version": API_VERSION, "phase": 1}
+        from app.services.semantic_engine import is_semantic_engine_ready
+        is_ready = is_semantic_engine_ready()
+        return {
+            "status": "ok", 
+            "version": API_VERSION, 
+            "phase": 2 if is_ready else 1,
+            "semantic_engine_ready": is_ready
+        }
 
     return app
 
