@@ -1,17 +1,18 @@
 """
 PromptGuard – Pydantic request / response models.
 
-Phase 2 update:
-  • PromptResponse.triggered_layer now accepts "semantic".
-  • PromptResponse gains an optional ``semantic_result`` field that carries
-    the SemanticResponse payload when the semantic engine is active.
+Phase 3.5 update:
+  • PromptResponse.triggered_layer now also accepts "aggregation".
+  • PromptResponse gains an optional ``aggregation_result`` field that carries
+    the full breakdown of scores from the Phase 3.5 Risk Aggregation Engine.
 """
 
-from typing import Literal, Optional
+from typing import Any, Dict, Literal, Optional
 
 from pydantic import BaseModel, Field
 
 from app.models.semantic_response import SemanticResponse
+from app.models.classifier_response import ClassifierResponse
 
 
 class PromptRequest(BaseModel):
@@ -38,7 +39,7 @@ class PromptResponse(BaseModel):
         ...,
         description="Final routing decision based on risk score.",
     )
-    triggered_layer: Literal["rule", "semantic", "none"] = Field(
+    triggered_layer: Literal["rule", "semantic", "classifier", "aggregation", "none"] = Field(
         ...,
         description="Which detection layer triggered the decision.",
     )
@@ -47,5 +48,19 @@ class PromptResponse(BaseModel):
         description=(
             "Semantic similarity check details (Phase 2). "
             "None when the semantic engine is not initialised."
+        ),
+    )
+    classifier_result: Optional[ClassifierResponse] = Field(
+        default=None,
+        description=(
+            "DistilBERT classifier details (Phase 3). "
+            "None when the classifier is not loaded."
+        ),
+    )
+    aggregation_result: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description=(
+            "Phase 3.5 Risk Aggregation breakdown: rule_score, semantic_score, "
+            "classifier_score, chunk_risk_score, final_risk_score."
         ),
     )

@@ -1,5 +1,7 @@
 {
   "activation": "gelu",
+  "id2label": {"0": "ADVERSARIAL", "1": "BENIGN"},
+  "label2id": {"ADVERSARIAL": 0, "BENIGN": 1},
   "architectures": [
     "DistilBertForSequenceClassification"
   ],

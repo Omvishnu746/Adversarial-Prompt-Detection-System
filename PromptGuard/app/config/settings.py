@@ -35,9 +35,9 @@ LOG_FILE_PATH: Path = Path(
 
 # ── API settings ─────────────────────────────────────────────────────────────
 API_TITLE: str = "PromptGuard"
-API_VERSION: str = "0.2.0"
+API_VERSION: str = "0.3.0"
 API_DESCRIPTION: str = (
-    "Phase 2 – Rule-based + SBERT Semantic adversarial prompt detection middleware."
+    "Phase 3 – Rule-based + SBERT Semantic + DistilBERT Classifier adversarial prompt detection middleware."
 )
 
 # ── Risk thresholds (Phase 1) ─────────────────────────────────────────────────
@@ -62,3 +62,14 @@ FAISS_INDEX_PATH: str = str(BASE_DIR / "data" / "embeddings" / "faiss_index.bin"
 
 # SBERT model name – change to swap backbone (all-MiniLM-L6-v2 is the default).
 SBERT_MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
+
+# ── Phase 3: DistilBERT Classifier settings ───────────────────────────────────
+
+# Path to the locally trained fine-tuned DistilBERT model.
+CLASSIFIER_MODEL_PATH: str = str(BASE_DIR / "models" / "distilbert_promptguard")
+
+# Risk score assigned when the classifier layer triggers a BLOCK.
+# Intentionally lower than SEMANTIC_BLOCK_SCORE (0.9) to reflect that
+# the classifier is a probabilistic model, and rule/semantic matches are
+# more deterministic indicators.
+CLASSIFIER_BLOCK_SCORE: float = 0.8

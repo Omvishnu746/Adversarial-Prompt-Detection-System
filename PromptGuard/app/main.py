@@ -1,5 +1,5 @@
 """
-PromptGuard – FastAPI Application Entry Point (Phase 1)
+PromptGuard – FastAPI Application Entry Point (Phase 3)
 """
 
 from fastapi import FastAPI
@@ -13,11 +13,14 @@ from app.routes.check_prompt import router as prompt_router
 
 from contextlib import asynccontextmanager
 from app.services.semantic_engine import initialise_semantic_engine
+from app.services.model_loader import initialise_classifier, is_classifier_loaded
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialise the semantic engine on startup
+    # Phase 2: Initialise the SBERT semantic engine on startup
     initialise_semantic_engine()
+    # Phase 3: Eagerly load the fine-tuned DistilBERT classifier
+    initialise_classifier()
     yield
     # Cleanup on shutdown (if any)
 
@@ -46,12 +49,22 @@ def create_app() -> FastAPI:
     @app.get("/health", tags=["System"])
     async def health() -> dict:
         from app.services.semantic_engine import is_semantic_engine_ready
-        is_ready = is_semantic_engine_ready()
+        semantic_ready = is_semantic_engine_ready()
+        classifier_ready = is_classifier_loaded()
+
+        if classifier_ready:
+            phase = 3
+        elif semantic_ready:
+            phase = 2
+        else:
+            phase = 1
+
         return {
-            "status": "ok", 
-            "version": API_VERSION, 
-            "phase": 2 if is_ready else 1,
-            "semantic_engine_ready": is_ready
+            "status": "ok",
+            "version": API_VERSION,
+            "phase": phase,
+            "semantic_engine_ready": semantic_ready,
+            "classifier_ready": classifier_ready,
         }
 
     return app

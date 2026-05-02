@@ -4,15 +4,20 @@ PromptGuard – Structured JSON Logger
 Writes one JSON object per line to logs/promptguard.log.
 Each entry is human-readable and machine-parseable.
 
-Log schema (Phase 2 update):
+Log schema (Phase 3.5 update):
   {
-    "timestamp":       ISO-8601 UTC string,
-    "prompt":          first 200 chars of the original prompt,
-    "risk_score":      float 0.0–1.0,
-    "decision":        "ALLOW" | "BLOCK",
-    "triggered_layer": "rule" | "semantic" | "none",
-    "semantic_score":  float 0.0–1.0 | null,
-    "semantic_match":  bool | null
+    "timestamp":            ISO-8601 UTC string,
+    "prompt":               first 200 chars of the original prompt,
+    "risk_score":           float 0.0–1.0,
+    "decision":             "ALLOW" | "BLOCK",
+    "triggered_layer":      "rule" | "semantic" | "classifier" | "aggregation" | "none",
+    "semantic_score":       float 0.0–1.0 | null,
+    "semantic_match":       bool | null,
+    "classifier_score":     float 0.0–1.0 | null,
+    "classifier_triggered": bool | null,
+    "rule_score":           float 0.0–1.0 | null,
+    "chunk_risk_score":     float 0.0–1.0 | null,
+    "final_risk_score":     float 0.0–1.0 | null
   }
 """
 
@@ -65,25 +70,40 @@ def log_request(
     triggered_layer: str,
     semantic_score: float | None = None,
     semantic_match: bool | None = None,
+    classifier_score: float | None = None,
+    classifier_triggered: bool | None = None,
+    rule_score: float | None = None,
+    chunk_risk_score: float | None = None,
+    final_risk_score: float | None = None,
 ) -> None:
     """
     Append a structured JSON log entry for a single /check_prompt request.
 
     Args:
-        prompt:          Raw user prompt (truncated to 200 chars in the log).
-        risk_score:      Final risk score assigned to the prompt.
-        decision:        "ALLOW" or "BLOCK".
-        triggered_layer: "rule", "semantic", or "none".
-        semantic_score:  Cosine similarity score from Phase 2 (None = engine off).
-        semantic_match:  Whether the semantic layer triggered (None = engine off).
+        prompt:               Raw user prompt (truncated to 200 chars in the log).
+        risk_score:           Final risk score assigned to the prompt.
+        decision:             "ALLOW" or "BLOCK".
+        triggered_layer:      "rule", "semantic", "classifier", "aggregation", or "none".
+        semantic_score:       Cosine similarity score from Phase 2 (None = engine off).
+        semantic_match:       Whether the semantic layer triggered (None = engine off).
+        classifier_score:     Adversarial probability from Phase 3 (None = not loaded).
+        classifier_triggered: Whether the classifier layer triggered (None = not loaded).
+        rule_score:           Rule engine output score (None = not evaluated).
+        chunk_risk_score:     Max adversarial probability across chunks (None = not available).
+        final_risk_score:     Aggregated risk score from Phase 3.5 (None = not computed).
     """
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "prompt": prompt[:200],           # truncate to avoid massive log lines
+        "prompt": prompt[:200],
         "risk_score": round(risk_score, 4),
         "decision": decision,
         "triggered_layer": triggered_layer,
         "semantic_score": round(semantic_score, 4) if semantic_score is not None else None,
         "semantic_match": semantic_match,
+        "classifier_score": round(classifier_score, 4) if classifier_score is not None else None,
+        "classifier_triggered": classifier_triggered,
+        "rule_score": round(rule_score, 4) if rule_score is not None else None,
+        "chunk_risk_score": round(chunk_risk_score, 4) if chunk_risk_score is not None else None,
+        "final_risk_score": round(final_risk_score, 4) if final_risk_score is not None else None,
     }
     _logger.info(json.dumps(entry, ensure_ascii=False))
