@@ -75,6 +75,9 @@ def log_request(
     rule_score: float | None = None,
     chunk_risk_score: float | None = None,
     final_risk_score: float | None = None,
+    router_decision: str | None = None,
+    router_reason: str | None = None,
+    sanitized: bool | None = None,
 ) -> None:
     """
     Append a structured JSON log entry for a single /check_prompt request.
@@ -82,7 +85,7 @@ def log_request(
     Args:
         prompt:               Raw user prompt (truncated to 200 chars in the log).
         risk_score:           Final risk score assigned to the prompt.
-        decision:             "ALLOW" or "BLOCK".
+        decision:             "ALLOW", "BLOCK", or "SANITIZE".
         triggered_layer:      "rule", "semantic", "classifier", "aggregation", or "none".
         semantic_score:       Cosine similarity score from Phase 2 (None = engine off).
         semantic_match:       Whether the semantic layer triggered (None = engine off).
@@ -91,6 +94,9 @@ def log_request(
         rule_score:           Rule engine output score (None = not evaluated).
         chunk_risk_score:     Max adversarial probability across chunks (None = not available).
         final_risk_score:     Aggregated risk score from Phase 3.5 (None = not computed).
+        router_decision:      Final Phase 4 router decision (None = router not run).
+        router_reason:        Human-readable reason from the Phase 4 router.
+        sanitized:            True if the prompt was sanitized before passing downstream.
     """
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -105,5 +111,8 @@ def log_request(
         "rule_score": round(rule_score, 4) if rule_score is not None else None,
         "chunk_risk_score": round(chunk_risk_score, 4) if chunk_risk_score is not None else None,
         "final_risk_score": round(final_risk_score, 4) if final_risk_score is not None else None,
+        "router_decision": router_decision,
+        "router_reason": router_reason,
+        "sanitized": sanitized,
     }
     _logger.info(json.dumps(entry, ensure_ascii=False))

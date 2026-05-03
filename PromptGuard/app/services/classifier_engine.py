@@ -17,12 +17,15 @@ from app.services.prediction_utils import logits_to_probabilities
 logger = logging.getLogger("promptguard.classifier_engine")
 
 # The threshold for flagging a prompt as adversarial.
-# Set to 0.999 based on empirical analysis of the trained model's score distribution:
-#   - All genuine adversarial prompts score 1.0000 (or very close)
-#   - Known false positives (e.g. sentences that appeared verbatim inside adversarial
-#     training examples) score < 0.999
-# This high threshold eliminates false positives while retaining full detection coverage.
-ADVERSARIAL_THRESHOLD = 0.999
+# Set to 0.999999 (6 nines) based on empirical analysis of the score distribution:
+#
+#   Genuine adversarial prompts  → float32(1.0)       (> 0.999999) → BLOCK
+#   Contaminated false positives → ≤ 0.9999912...      (< 0.999999) → PASS
+#
+# In PyTorch float32, softmax outputs for extreme logit differences round to
+# exactly 1.0, while training-data-contaminated benign phrases score at most
+# 0.9999912 — leaving a clear gap at 0.999999 to separate them.
+ADVERSARIAL_THRESHOLD = 0.999999
 
 def run_classifier(prompt: str) -> ClassifierResponse:
     """

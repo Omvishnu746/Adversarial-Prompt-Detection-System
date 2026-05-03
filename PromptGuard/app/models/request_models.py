@@ -1,10 +1,11 @@
 """
 PromptGuard – Pydantic request / response models.
 
-Phase 3.5 update:
-  • PromptResponse.triggered_layer now also accepts "aggregation".
-  • PromptResponse gains an optional ``aggregation_result`` field that carries
-    the full breakdown of scores from the Phase 3.5 Risk Aggregation Engine.
+Phase 4 update:
+  • PromptResponse.decision now also accepts "SANITIZE".
+  • PromptResponse gains an optional ``router_result`` field carrying the
+    full Phase 4 RouterResponse payload (decision, confidence, reason,
+    sanitized_text).
 """
 
 from typing import Any, Dict, Literal, Optional
@@ -13,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from app.models.semantic_response import SemanticResponse
 from app.models.classifier_response import ClassifierResponse
+from app.models.router_response import RouterResponse
 
 
 class PromptRequest(BaseModel):
@@ -35,9 +37,9 @@ class PromptResponse(BaseModel):
         le=1.0,
         description="Normalised risk score between 0.0 (safe) and 1.0 (blocked).",
     )
-    decision: Literal["ALLOW", "BLOCK"] = Field(
+    decision: Literal["ALLOW", "BLOCK", "SANITIZE"] = Field(
         ...,
-        description="Final routing decision based on risk score.",
+        description="Final routing decision: ALLOW, BLOCK, or SANITIZE.",
     )
     triggered_layer: Literal["rule", "semantic", "classifier", "aggregation", "none"] = Field(
         ...,
@@ -62,5 +64,12 @@ class PromptResponse(BaseModel):
         description=(
             "Phase 3.5 Risk Aggregation breakdown: rule_score, semantic_score, "
             "classifier_score, chunk_risk_score, final_risk_score."
+        ),
+    )
+    router_result: Optional[RouterResponse] = Field(
+        default=None,
+        description=(
+            "Phase 4 Decision Router output: decision, confidence, reason, "
+            "and optional sanitized_text."
         ),
     )

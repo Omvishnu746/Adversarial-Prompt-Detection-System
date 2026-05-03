@@ -35,9 +35,10 @@ LOG_FILE_PATH: Path = Path(
 
 # ── API settings ─────────────────────────────────────────────────────────────
 API_TITLE: str = "PromptGuard"
-API_VERSION: str = "0.3.0"
+API_VERSION: str = "0.4.0"
 API_DESCRIPTION: str = (
-    "Phase 3 – Rule-based + SBERT Semantic + DistilBERT Classifier adversarial prompt detection middleware."
+    "Phase 4 – Rule + Semantic + DistilBERT + Aggregation + Decision Router "
+    "adversarial prompt detection middleware."
 )
 
 # ── Risk thresholds (Phase 1) ─────────────────────────────────────────────────
