@@ -40,3 +40,30 @@ faiss-cpu>=1.8.0
 
 # NumPy – vector maths and .npy serialisation
 numpy>=1.26.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 3 – DistilBERT Classifier
+# ─────────────────────────────────────────────────────────────────────────────
+transformers>=4.40.0
+torch>=2.2.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 5 – Async Auditor (Celery + Redis + PostgreSQL)
+# ─────────────────────────────────────────────────────────────────────────────
+# Install infrastructure first:
+#   docker compose up -d          (starts Redis + PostgreSQL)
+# Then install these deps:
+#   pip install celery[redis] sqlalchemy psycopg2-binary
+
+# Celery – distributed task queue (async audit logging)
+celery[redis]>=5.3.0
+
+# Redis Python client (Celery broker transport)
+redis>=5.0.0
+
+# SQLAlchemy – ORM for PostgreSQL audit tables
+sqlalchemy>=2.0.0
+
+# psycopg2 – PostgreSQL adapter for Python
+# Use psycopg2-binary for easy install (no build tools needed)
+psycopg2-binary>=2.9.0

@@ -42,6 +42,7 @@ from app.services.aggregation_engine import aggregate_risk
 from app.services.router_engine import route_decision
 from app.services.logger import log_request
 from app.config.router_config import CHUNK_BLOCK_THRESHOLD
+from app.auditor.audit_logger import trigger_audit_log
 
 router = APIRouter()
 
@@ -152,7 +153,7 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         risk_score     = router_out.confidence
         triggered_layer = "none" if decision == "ALLOW" else "aggregation"
 
-    # ── 8. Log ────────────────────────────────────────────────────────────────
+    # ── 8. Log (structured file logger) ───────────────────────────────────────
     log_request(
         prompt=payload.prompt,
         risk_score=round(risk_score, 4),
@@ -167,6 +168,21 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         final_risk_score=raw_final_risk,
         router_decision=decision,
         router_reason=router_out.reason,
+        sanitized=decision == "SANITIZE",
+    )
+
+    # ── 9. Async Audit (Phase 5) ─────────────────────────────────────────────
+    # Fire-and-forget: dispatched to Celery worker via Redis.
+    # Returns in < 1 ms — does NOT block the API response.
+    trigger_audit_log(
+        prompt=payload.prompt,
+        decision=decision,
+        triggered_layer=triggered_layer,
+        rule_score=rule_score,
+        semantic_score=semantic_score,
+        classifier_score=raw_cls_score,
+        chunk_risk_score=chunk_risk_score,
+        final_risk_score=raw_final_risk,
         sanitized=decision == "SANITIZE",
     )
 

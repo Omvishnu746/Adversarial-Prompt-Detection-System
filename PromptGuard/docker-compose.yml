@@ -1,0 +1,50 @@
+# PromptGuard – Phase 5 Infrastructure
+# Services: PostgreSQL + Redis
+#
+# Usage:
+#   docker compose up -d          # start Redis + Postgres in background
+#   docker compose down           # stop services
+#   docker compose down -v        # stop + wipe volumes
+
+version: "3.9"
+
+services:
+
+  # ── Redis (Celery broker + result backend) ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: promptguard_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── PostgreSQL (audit log storage) ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: promptguard_postgres
+    environment:
+      POSTGRES_DB:       promptguard
+      POSTGRES_USER:     promptguard
+      POSTGRES_PASSWORD: veritext123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promptguard -d promptguard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
