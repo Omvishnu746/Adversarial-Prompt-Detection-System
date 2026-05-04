@@ -256,3 +256,58 @@
   border-color: var(--color-accent);
   background: rgba(56,189,248,0.07);
 }
+
+/* ── Risk level badge ────────────────────────────────────────────────────────── */
+.risk-level-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #fff;
+  /* background is set inline via getRiskColor() */
+}
+
+/* ── Explanation block ───────────────────────────────────────────────────────── */
+.explanation-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeSlideIn 0.2s ease;
+}
+
+.explanation-heading {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.explanation-heading + .explanation-heading,
+.explanation-list + .explanation-heading {
+  margin-top: 10px;
+}
+
+.explanation-list {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.explanation-list li {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin-bottom: 4px;
+  color: var(--color-text-secondary);
+}
+
+.explanation-list li strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}

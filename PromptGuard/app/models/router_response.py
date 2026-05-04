@@ -13,6 +13,9 @@ class RouterResponse(BaseModel):
     Fields:
         decision:        Final enforcement action — ALLOW, BLOCK, or SANITIZE.
         confidence:      The final_risk_score that drove the decision (0.0–1.0).
+        risk_level:      Human-readable risk band — LOW, MEDIUM, or HIGH.
+                         Derived from the final_risk_score; never exposes the
+                         raw numeric value in the public API.
         reason:          Human-readable explanation of why this decision was made.
         sanitized_text:  Cleaned prompt text when decision == SANITIZE; None otherwise.
     """
@@ -26,6 +29,10 @@ class RouterResponse(BaseModel):
         ge=0.0,
         le=1.0,
         description="Final risk score that drove the routing decision (0.0–1.0).",
+    )
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = Field(
+        ...,
+        description="Abstracted risk band: LOW, MEDIUM, or HIGH.",
     )
     reason: str = Field(
         ...,

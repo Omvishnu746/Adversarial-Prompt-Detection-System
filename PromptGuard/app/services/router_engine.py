@@ -27,7 +27,7 @@ All operations are pure regex + arithmetic, well within the < 2 ms target.
 import logging
 import math
 import re
-from typing import Optional
+from typing import Literal, Optional
 
 from app.models.router_response import RouterResponse
 from app.config.router_config import (
@@ -80,6 +80,26 @@ def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return 0.0
     return max(lo, min(hi, float(value)))
+
+
+def _score_to_risk_level(score: float) -> Literal["LOW", "MEDIUM", "HIGH"]:
+    """
+    Map a normalised risk score (0.0–1.0) to an abstracted, user-safe risk band.
+
+    Bands are aligned with ALLOW_THRESHOLD / BLOCK_THRESHOLD so the
+    human-readable level always matches the routing decision:
+      score <= ALLOW_THRESHOLD   → LOW
+      score  < BLOCK_THRESHOLD   → MEDIUM  (grey zone / sanitize range)
+      score >= BLOCK_THRESHOLD   → HIGH
+
+    This helper intentionally returns a string literal so that the raw
+    numeric score is never placed in a user-facing field.
+    """
+    if score <= ALLOW_THRESHOLD:
+        return "LOW"
+    if score < BLOCK_THRESHOLD:
+        return "MEDIUM"
+    return "HIGH"
 
 
 def sanitize_text(text: str) -> str:
@@ -157,6 +177,7 @@ def route_decision(
         return RouterResponse(
             decision="BLOCK",
             confidence=round(f, 4),
+            risk_level=_score_to_risk_level(f),
             reason="Rule-based critical pattern detected",
             sanitized_text=None,
         )
@@ -167,6 +188,7 @@ def route_decision(
         return RouterResponse(
             decision="BLOCK",
             confidence=round(f, 4),
+            risk_level=_score_to_risk_level(f),
             reason="High-risk chunk detected",
             sanitized_text=None,
         )
@@ -177,6 +199,7 @@ def route_decision(
         return RouterResponse(
             decision="BLOCK",
             confidence=round(f, 4),
+            risk_level=_score_to_risk_level(f),
             reason="Aggregated risk exceeds block threshold",
             sanitized_text=None,
         )
@@ -187,6 +210,7 @@ def route_decision(
         return RouterResponse(
             decision="ALLOW",
             confidence=round(f, 4),
+            risk_level="LOW",
             reason="Low risk detected",
             sanitized_text=None,
         )
@@ -200,6 +224,7 @@ def route_decision(
     return RouterResponse(
         decision="SANITIZE",
         confidence=round(f, 4),
+        risk_level="MEDIUM",
         reason="Moderate risk detected — adversarial patterns removed",
         sanitized_text=sanitized_text,
     )

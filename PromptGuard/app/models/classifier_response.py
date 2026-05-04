@@ -2,6 +2,8 @@
 PromptGuard – Pydantic response model for Phase 3 Classifier Layer.
 """
 
+from typing import List
+
 from pydantic import BaseModel, Field
 
 class ClassifierResponse(BaseModel):
@@ -45,5 +47,13 @@ class ClassifierResponse(BaseModel):
             "Maximum adversarial probability across all chunks (0.0–1.0). "
             "Equal to adversarial_probability for single-chunk prompts. "
             "Used directly by the Phase 3.5 Risk Aggregation Engine."
+        ),
+    )
+    tags: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Safe, abstracted category tags emitted for user-facing explainability. "
+            "Contains ['classifier_high_risk'] when is_adversarial=True, "
+            "otherwise an empty list. Never exposes probabilities or thresholds."
         ),
     )

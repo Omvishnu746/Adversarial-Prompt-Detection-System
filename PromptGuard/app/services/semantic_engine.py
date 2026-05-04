@@ -29,7 +29,7 @@ embeddings / FAISS index have been built via the build scripts.
 from __future__ import annotations
 
 import logging
-from typing import TypedDict
+from typing import List, TypedDict
 
 import numpy as np
 
@@ -69,10 +69,15 @@ class SemanticCheckResult(TypedDict):
         nearest_distance:  Raw squared L2 distance from FAISS.
                            ``float('inf')`` when the layer is unavailable or
                            the index is empty.
+        tags:              Safe category tags for user-facing explainability.
+                           Contains ["semantic_similarity"] when matched=True,
+                           otherwise an empty list.  Never exposes scores or
+                           threshold values.
     """
     similarity_score: float
     matched: bool
     nearest_distance: float
+    tags: List[str]  # safe category tags; empty when no match
 
 
 # ── Sentinel result for when the layer is not ready ───────────────────────────
@@ -81,6 +86,7 @@ _UNAVAILABLE_RESULT: SemanticCheckResult = SemanticCheckResult(
     similarity_score=SEMANTIC_UNAVAILABLE_SCORE,
     matched=False,
     nearest_distance=float("inf"),
+    tags=[],
 )
 
 
@@ -205,4 +211,6 @@ def semantic_similarity_check(prompt: str) -> SemanticCheckResult:
         similarity_score=round(similarity_score, 6),
         matched=matched,
         nearest_distance=round(nearest_dist, 6),
+        # Emit abstracted tag when matched; never include raw scores here.
+        tags=["semantic_similarity"] if matched else [],
     )

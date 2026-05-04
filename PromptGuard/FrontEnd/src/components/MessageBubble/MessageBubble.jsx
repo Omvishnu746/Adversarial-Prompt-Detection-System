@@ -3,8 +3,23 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { formatTime, decisionMeta, formatPercent } from '../../utils/formatters'
+import { formatTime, decisionMeta } from '../../utils/formatters'
 import './MessageBubble.css'
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Map a risk_level string to its corresponding CSS colour token.
+ * Never display numeric scores — only the abstracted level label.
+ */
+function getRiskColor(level) {
+  switch (level) {
+    case 'LOW':    return 'var(--color-allow)'
+    case 'MEDIUM': return 'var(--color-sanitize)'
+    case 'HIGH':   return 'var(--color-block)'
+    default:       return 'var(--color-text-muted)'
+  }
+}
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
@@ -48,6 +63,62 @@ function DecisionBadge({ decision }) {
   )
 }
 
+/**
+ * Coloured pill showing the abstracted risk band (LOW / MEDIUM / HIGH).
+ * Intentionally does NOT show numeric scores.
+ */
+function RiskLevelBadge({ level }) {
+  if (!level) return null
+  return (
+    <span
+      className="risk-level-badge"
+      style={{ background: getRiskColor(level) }}
+      aria-label={`Risk level: ${level}`}
+    >
+      {level}
+    </span>
+  )
+}
+
+/**
+ * Renders the structured explanation block below the Markdown content.
+ * Shows categorised reasons and safe suggestions returned by the backend.
+ * Never exposes internal scores, thresholds, or model details.
+ */
+function ExplanationBlock({ explanation }) {
+  if (!explanation) return null
+  const hasReasons     = explanation.reasons?.length     > 0
+  const hasSuggestions = explanation.suggestions?.length > 0
+  if (!hasReasons && !hasSuggestions) return null
+
+  return (
+    <div className="explanation-box" role="region" aria-label="Detection explanation">
+      {hasReasons && (
+        <>
+          <h4 className="explanation-heading">Why flagged</h4>
+          <ul className="explanation-list">
+            {explanation.reasons.map((r, i) => (
+              <li key={i}>
+                <strong>{r.category}:</strong> {r.message}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {hasSuggestions && (
+        <>
+          <h4 className="explanation-heading">Suggestions</h4>
+          <ul className="explanation-list">
+            {explanation.suggestions.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
+
 /** Custom markdown components for react-markdown */
 const markdownComponents = {
   code({ node, inline, className, children, ...props }) {
@@ -87,9 +158,12 @@ export default function MessageBubble({ message }) {
         <div className="message-meta">
           <span className="message-role">{isUser ? 'You' : 'PromptGuard'}</span>
           <span className="message-time">{formatTime(timestamp)}</span>
-          {/* Decision badge in header for assistant */}
+          {/* Decision + Risk Level badges in header for assistant */}
           {!isUser && apiResponse && (
-            <DecisionBadge decision={apiResponse.decision} />
+            <>
+              <DecisionBadge decision={apiResponse.decision} />
+              <RiskLevelBadge level={apiResponse.risk_level} />
+            </>
           )}
         </div>
 
@@ -115,6 +189,11 @@ export default function MessageBubble({ message }) {
             {/* Typing cursor */}
             {isStreaming && <span className="typing-cursor" aria-hidden="true" />}
           </div>
+
+          {/* Structured explanation block — only for completed assistant messages */}
+          {!isUser && !isStreaming && apiResponse?.explanation && (
+            <ExplanationBlock explanation={apiResponse.explanation} />
+          )}
         </div>
 
         {/* Actions */}

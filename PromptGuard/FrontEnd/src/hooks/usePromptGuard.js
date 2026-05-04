@@ -9,46 +9,56 @@
 import { useCallback, useRef } from 'react'
 import { useChat } from '../context/ChatContext'
 import { checkPrompt } from '../services/promptGuardApi'
-import { generateId, decisionMeta } from '../utils/formatters'
+import { generateId } from '../utils/formatters'
 
 /** Characters typed per interval tick in the typewriter animation */
 const TYPING_CHUNK = 3
 /** Interval (ms) between each typewriter tick */
 const TYPING_INTERVAL_MS = 18
 
+/** Emoji map for each decision outcome */
+const DECISION_EMOJI = {
+  ALLOW:    '🟢',
+  BLOCK:    '🔴',
+  SANITIZE: '🟡',
+}
+
 /**
  * Build the assistant message text from the PromptGuard API response.
- * This is what will be streamed into the chat bubble.
+ *
+ * Security rule: this function must NEVER include raw numeric scores
+ * (risk_score, adversarial_probability, similarity_score, logits, etc.).
+ * Only decision, risk_level, and the structured explanation are surfaced.
  */
 function buildAssistantContent(apiResponse) {
-  const { decision, risk_score, triggered_layer, router_result, semantic_result, classifier_result } = apiResponse
-  const meta = decisionMeta(decision)
+  const { decision, risk_level, explanation, router_result } = apiResponse
+  const emoji = DECISION_EMOJI[decision] ?? '❓'
 
-  let text = `${meta.emoji} **Decision: ${decision}**\n\n`
-  text += `**Risk Score:** ${(risk_score * 100).toFixed(1)}%\n`
-  text += `**Triggered Layer:** ${triggered_layer}\n\n`
+  let text = `${emoji} **Decision: ${decision}**\n\n`
 
-  if (router_result?.reason) {
-    text += `**Reason:** ${router_result.reason}\n\n`
+  if (risk_level) {
+    text += `**Risk Level:** ${risk_level}\n\n`
   }
 
+  if (explanation?.reasons?.length) {
+    text += `### ⚠️ Why this was flagged:\n`
+    explanation.reasons.forEach(r => {
+      text += `- **${r.category}**: ${r.message}\n`
+    })
+    text += '\n'
+  }
+
+  if (explanation?.suggestions?.length && decision !== 'ALLOW') {
+    text += `### 💡 How to improve your prompt:\n`
+    explanation.suggestions.forEach(s => {
+      text += `- ${s}\n`
+    })
+    text += '\n'
+  }
+
+  // Only show sanitized text — never the internal reason string
   if (router_result?.sanitized_text) {
-    text += `**Sanitized Prompt:**\n\`\`\`\n${router_result.sanitized_text}\n\`\`\`\n\n`
-  }
-
-  // Layer breakdown
-  text += `---\n### Detection Layer Breakdown\n\n`
-
-  if (semantic_result) {
-    text += `**Semantic Engine**\n`
-    text += `- Similarity Score: ${(semantic_result.similarity_score * 100).toFixed(1)}%\n`
-    text += `- Matched: ${semantic_result.matched ? 'Yes 🔴' : 'No 🟢'}\n\n`
-  }
-
-  if (classifier_result) {
-    text += `**DistilBERT Classifier**\n`
-    text += `- Adversarial Probability: ${(classifier_result.adversarial_probability * 100).toFixed(1)}%\n`
-    text += `- Is Adversarial: ${classifier_result.is_adversarial ? 'Yes 🔴' : 'No 🟢'}\n\n`
+    text += `### ✂️ Sanitized Prompt:\n\`\`\`\n${router_result.sanitized_text}\n\`\`\`\n`
   }
 
   return text.trim()

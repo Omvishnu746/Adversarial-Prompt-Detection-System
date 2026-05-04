@@ -48,7 +48,8 @@ def run_classifier(prompt: str) -> ClassifierResponse:
             is_adversarial=False,
             adversarial_probability=0.0,
             benign_probability=1.0,
-            max_chunk_index=0
+            max_chunk_index=0,
+            tags=[],
         )
         
     model = get_model()
@@ -99,4 +100,6 @@ def run_classifier(prompt: str) -> ClassifierResponse:
         benign_probability=best_benign_prob,
         max_chunk_index=max_chunk_idx,
         chunk_risk_score=chunk_risk_score,
+        # Emit abstracted tag only; never expose raw probabilities here.
+        tags=["classifier_high_risk"] if is_adversarial else [],
     )

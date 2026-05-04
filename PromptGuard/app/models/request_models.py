@@ -6,6 +6,12 @@ Phase 4 update:
   • PromptResponse gains an optional ``router_result`` field carrying the
     full Phase 4 RouterResponse payload (decision, confidence, reason,
     sanitized_text).
+
+Phase 5 explainability update:
+  • PromptResponse gains a structured ``explanation`` field (ExplanationResponse)
+    replacing the previous plain-string field.
+  • PromptResponse gains a ``risk_level`` field (LOW / MEDIUM / HIGH)
+    surfaced from RouterResponse for the frontend to use without raw scores.
 """
 
 from typing import Any, Dict, Literal, Optional
@@ -15,6 +21,7 @@ from pydantic import BaseModel, Field
 from app.models.semantic_response import SemanticResponse
 from app.models.classifier_response import ClassifierResponse
 from app.models.router_response import RouterResponse
+from app.models.explainability_response import ExplanationResponse
 
 
 class PromptRequest(BaseModel):
@@ -41,13 +48,17 @@ class PromptResponse(BaseModel):
         ...,
         description="Final routing decision: ALLOW, BLOCK, or SANITIZE.",
     )
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = Field(
+        default="LOW",
+        description="Abstracted risk band for frontend display: LOW, MEDIUM, or HIGH.",
+    )
     triggered_layer: Literal["rule", "semantic", "classifier", "aggregation", "none"] = Field(
         ...,
         description="Which detection layer triggered the decision.",
     )
-    explanation: Optional[str] = Field(
+    explanation: Optional[ExplanationResponse] = Field(
         default=None,
-        description="Human-readable explanation of why the prompt was blocked.",
+        description="Structured, user-safe explanation of why the prompt was flagged.",
     )
     sanitized_text: Optional[str] = Field(
         default=None,

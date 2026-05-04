@@ -33,6 +33,7 @@ from fastapi import APIRouter
 from app.models.request_models import PromptRequest, PromptResponse
 from app.models.semantic_response import SemanticResponse
 from app.models.router_response import RouterResponse
+from app.models.explainability_response import ExplanationResponse, ExplanationReason
 from app.services.preprocessing import preprocess
 from app.services.rule_engine import evaluate_rules
 from app.services.semantic_engine import semantic_similarity_check
@@ -41,6 +42,7 @@ from app.services.model_loader import is_classifier_loaded
 from app.services.aggregation_engine import aggregate_risk
 from app.services.router_engine import route_decision
 from app.services.logger import log_request
+from app.services.explainability_engine import build_explanation
 from app.config.router_config import CHUNK_BLOCK_THRESHOLD
 from app.auditor.audit_logger import trigger_audit_log
 
@@ -137,6 +139,7 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         router_out = RouterResponse(
             decision="BLOCK",
             confidence=round(raw_final_risk, 4),
+            risk_level="HIGH",
             reason=f"{triggered_layer.capitalize()}-based block — "
                    f"raw risk {raw_final_risk:.4f}",
             sanitized_text=None,
@@ -153,7 +156,27 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         risk_score     = router_out.confidence
         triggered_layer = "none" if decision == "ALLOW" else "aggregation"
 
-    # ── 8. Log (structured file logger) ───────────────────────────────────────
+    # ── 8. Collect safe tags from all tiers (for explainability) ─────────────
+    # Each tier returns an abstracted tag list — never raw scores or patterns.
+    all_tags: list[str] = []
+    all_tags.extend(rule_result["tags"])            # e.g. ["instruction_override"]
+    all_tags.extend(semantic_raw["tags"])            # e.g. ["semantic_similarity"]
+    if classifier_data is not None:
+        all_tags.extend(classifier_data.tags)        # e.g. ["classifier_high_risk"]
+
+    # ── 9. Build structured, user-facing explanation ──────────────────────────
+    # build_explanation performs O(n) dict look-ups — well under 1 ms.
+    # No SHAP / LIME / attention weights are computed here.
+    explanation_dict = build_explanation(all_tags)
+    explanation_obj = ExplanationResponse(
+        reasons=[
+            ExplanationReason(category=r["category"], message=r["message"])
+            for r in explanation_dict["reasons"]
+        ],
+        suggestions=explanation_dict["suggestions"],
+    )
+
+    # ── 10. Log (structured file logger) ──────────────────────────────────────
     log_request(
         prompt=payload.prompt,
         risk_score=round(risk_score, 4),
@@ -171,7 +194,7 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         sanitized=decision == "SANITIZE",
     )
 
-    # ── 9. Async Audit (Phase 5) ─────────────────────────────────────────────
+    # ── 11. Async Audit (Phase 5) ─────────────────────────────────────────────
     # Fire-and-forget: dispatched to Celery worker via Redis.
     # Returns in < 1 ms — does NOT block the API response.
     trigger_audit_log(
@@ -186,35 +209,15 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         sanitized=decision == "SANITIZE",
     )
 
-    # ── 10. Explainability (Sync for Frontend) ───────────────────────────────
-    explanation = None
-    sanitized_text = None
 
-    if decision == "BLOCK":
-        if triggered_layer == "rule":
-            explanation = f"Blocked by Rule Engine. Matched rule: '{rule_result['rule_name']}'."
-        elif triggered_layer == "semantic":
-            explanation = f"Blocked by Semantic Cache. High similarity to known attacks ({semantic_score:.2f})."
-        elif triggered_layer in ("classifier", "aggregation"):
-            from app.auditor.explainability import get_top_tokens
-            # Extract top 5 tokens for the frontend
-            tokens = get_top_tokens(payload.prompt, top_k=5)
-            if tokens:
-                token_list = ", ".join([f"'{t['token']}'" for t in tokens])
-                explanation = f"Blocked by AI Classifier. Suspicious tokens detected: {token_list}."
-            else:
-                explanation = "Blocked by AI Classifier. High adversarial probability detected."
-
-    elif decision == "SANITIZE":
-        sanitized_text = router_out.sanitized_text
-
-    # ── 11. Respond ────────────────────────────────────────────────────────────
+    # ── 12. Respond ────────────────────────────────────────────────────────────
     return PromptResponse(
         risk_score=round(risk_score, 4),
         decision=decision,
+        risk_level=router_out.risk_level,
         triggered_layer=triggered_layer,
-        explanation=explanation,
-        sanitized_text=sanitized_text,
+        explanation=explanation_obj if all_tags else None,
+        sanitized_text=router_out.sanitized_text if decision == "SANITIZE" else None,
         rule_result=rule_result,
         semantic_result=semantic_data,
         classifier_result=classifier_data,
