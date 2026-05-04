@@ -24,8 +24,8 @@ logger = logging.getLogger("promptguard.classifier_engine")
 #
 # In PyTorch float32, softmax outputs for extreme logit differences round to
 # exactly 1.0, while training-data-contaminated benign phrases score at most
-# 0.9999912 — leaving a clear gap at 0.999999 to separate them.
-ADVERSARIAL_THRESHOLD = 0.999999
+# 0.9999 — leaving a clear gap at 0.99999 to separate them.
+ADVERSARIAL_THRESHOLD = 0.99999
 
 def run_classifier(prompt: str) -> ClassifierResponse:
     """

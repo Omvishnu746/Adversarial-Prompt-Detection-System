@@ -193,9 +193,6 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         triggered_layer=triggered_layer,
         semantic_result=semantic_data,
         classifier_result=classifier_data,
-        aggregation_result={
-            **agg_raw,                         # raw scores — honest signal picture
-            "binary_final_risk_score": round(bin_final_risk, 4),  # grey-zone router input
-        },
+        aggregation_result=agg_raw,  # raw scores — honest signal picture
         router_result=router_out,
     )

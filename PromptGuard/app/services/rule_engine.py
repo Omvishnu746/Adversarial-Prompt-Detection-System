@@ -75,6 +75,11 @@ RULES: list[RuleDefinition] = [
         pattern=r"(what\s+(were|are)\s+your\s+(original|initial|starting)\s+instructions?|repeat\s+everything\s+above|output\s+everything\s+before\s+this)",
         description="Tries to leak context above the user turn.",
     ),
+    _rule(
+        name="access_backend_secrets",
+        pattern=r"(access|display|show|reveal|leak|output)\s+(backend|server|internal|hidden)\s+(tools?|systems?|secrets?|data|files?)",
+        description="Attempts to access internal backend tools or secrets.",
+    ),
 ]
 
 

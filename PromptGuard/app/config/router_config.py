@@ -26,10 +26,10 @@ ALLOW_THRESHOLD        Aggregated final_risk_score at or below which the router
 RULE_BLOCK_THRESHOLD: float = 0.90
 
 # ── Chunk-level risk ─────────────────────────────────────────────────────────
-# Must match the classifier engine's ADVERSARIAL_THRESHOLD (0.999999).
+# Must match the classifier engine's ADVERSARIAL_THRESHOLD (0.99999).
 # Keeping these in sync ensures the chunk check and classifier always agree
 # on what constitutes an adversarial signal.
-CHUNK_BLOCK_THRESHOLD: float = 0.999999
+CHUNK_BLOCK_THRESHOLD: float = 0.99999
 
 # ── Aggregated risk ───────────────────────────────────────────────────────────
 BLOCK_THRESHOLD: float = 0.70
