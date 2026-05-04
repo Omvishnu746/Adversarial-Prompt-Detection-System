@@ -28,7 +28,7 @@ Binarized scores are only used as the internal router input to avoid
 contaminated raw probabilities routing benign phrases to SANITIZE.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from app.models.request_models import PromptRequest, PromptResponse
 from app.models.semantic_response import SemanticResponse
@@ -58,7 +58,7 @@ router = APIRouter()
         "Aggregation → Decision Router (ALLOW / BLOCK / SANITIZE)."
     ),
 )
-async def check_prompt(payload: PromptRequest) -> PromptResponse:
+async def check_prompt(payload: PromptRequest, background_tasks: BackgroundTasks) -> PromptResponse:
 
     # ── 1. Preprocess ─────────────────────────────────────────────────────────
     clean_prompt = preprocess(payload.prompt)
@@ -195,9 +195,10 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
     )
 
     # ── 11. Async Audit (Phase 5) ─────────────────────────────────────────────
-    # Fire-and-forget: dispatched to Celery worker via Redis.
+    # Fire-and-forget: dispatched to FastAPI background thread.
     # Returns in < 1 ms — does NOT block the API response.
     trigger_audit_log(
+        background_tasks=background_tasks,
         prompt=payload.prompt,
         decision=decision,
         triggered_layer=triggered_layer,

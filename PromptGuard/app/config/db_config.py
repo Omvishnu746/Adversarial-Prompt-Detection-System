@@ -11,7 +11,7 @@ import os
 # ── PostgreSQL ────────────────────────────────────────────────────────────────
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
-    "postgresql://promptguard:veritext123@localhost:5432/promptguard",
+    "sqlite:///promptguard.db",
 )
 
 # ── Redis (Celery broker + result backend) ────────────────────────────────────

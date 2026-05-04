@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from sqlalchemy import create_engine, func, text
 from sqlalchemy.orm import sessionmaker
 
-from app.auditor.celery_app import celery_app
 from app.auditor.db_models import AttackLog, Base, DailySummary
 from app.config.db_config import (
     AUTO_UPDATE_THREAT_INDEX,
@@ -52,15 +51,7 @@ def _get_session():
 
 # ── Task 1: log_attack_event ─────────────────────────────────────────────────
 
-@celery_app.task(
-    name="app.auditor.audit_tasks.log_attack_event",
-    bind=True,
-    max_retries=3,
-    default_retry_delay=5,
-    acks_late=True,
-)
 def log_attack_event(
-    self,
     *,
     prompt: str,
     decision: str,
@@ -145,17 +136,12 @@ def log_attack_event(
 
     except Exception as exc:
         logger.error("log_attack_event failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise exc
 
 
 # ── Task 2: generate_daily_summary ───────────────────────────────────────────
 
-@celery_app.task(
-    name="app.auditor.audit_tasks.generate_daily_summary",
-    bind=True,
-    max_retries=2,
-)
-def generate_daily_summary(self, target_date: str | None = None) -> dict:
+def generate_daily_summary(target_date: str | None = None) -> dict:
     """
     Aggregate attack_logs for a given date into daily_summaries.
 
@@ -225,4 +211,4 @@ def generate_daily_summary(self, target_date: str | None = None) -> dict:
 
     except Exception as exc:
         logger.error("generate_daily_summary failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise exc

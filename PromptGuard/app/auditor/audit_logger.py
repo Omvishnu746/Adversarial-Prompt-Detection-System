@@ -17,15 +17,14 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-logger = logging.getLogger("promptguard.audit_logger")
+from fastapi import BackgroundTasks
 
-# ── Availability flag ─────────────────────────────────────────────────────────
-# Set to False when Celery/Redis is not reachable so we don't spam errors.
-_celery_available: bool = True
+logger = logging.getLogger("promptguard.audit_logger")
 
 
 def trigger_audit_log(
     *,
+    background_tasks: BackgroundTasks,
     prompt: str,
     decision: str,
     triggered_layer: str = "none",
@@ -38,10 +37,10 @@ def trigger_audit_log(
     target_llm: Optional[str] = None,
 ) -> None:
     """
-    Dispatch an async audit task to the Celery worker.
+    Dispatch an async audit task using FastAPI BackgroundTasks.
 
     This function is called from check_prompt.py immediately after the router
-    decision.  It uses `.delay()` which enqueues the task and returns in < 1 ms.
+    decision. It enqueues the task and returns in < 1 ms.
 
     Parameters
     ----------
@@ -56,15 +55,11 @@ def trigger_audit_log(
     sanitized       True when SANITIZE decision was taken.
     target_llm      Downstream LLM identifier (optional).
     """
-    global _celery_available
-
-    if not _celery_available:
-        return  # Already flagged as unavailable — skip silently
-
     try:
         from app.auditor.audit_tasks import log_attack_event
 
-        log_attack_event.delay(
+        background_tasks.add_task(
+            log_attack_event,
             prompt=prompt,
             decision=decision,
             triggered_layer=triggered_layer,
@@ -79,11 +74,7 @@ def trigger_audit_log(
         )
 
     except Exception as exc:
-        # If Redis is down or Celery is not configured, log a warning once and
-        # continue — the API must never fail because of the auditor.
-        _celery_available = False
         logger.warning(
-            "Async audit unavailable — falling back to silent mode. "
-            "Start Redis + Celery worker to enable auditing. Error: %s",
+            "Async audit failed. Error: %s",
             exc,
         )
