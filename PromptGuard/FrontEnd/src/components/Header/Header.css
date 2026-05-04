@@ -1,0 +1,122 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 56px;
+  min-height: 56px;
+  background: var(--color-sidebar-bg);
+  border-bottom: 1px solid var(--color-border);
+  z-index: 10;
+}
+
+/* ── Hamburger ──────────────────────────────────────────────────────────────── */
+.header-menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.header-menu-btn:hover {
+  background: var(--color-hover);
+}
+
+.hamburger-line {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--color-text-secondary);
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+
+@media (max-width: 768px) {
+  .header-menu-btn {
+    display: flex;
+  }
+}
+
+/* ── Brand (mobile) ─────────────────────────────────────────────────────────── */
+.header-brand {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.header-brand-name {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (max-width: 768px) {
+  .header-brand {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ── Status ─────────────────────────────────────────────────────────────────── */
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  background: rgba(15,23,42,0.6);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-online {
+  background: var(--color-allow);
+  box-shadow: 0 0 6px var(--color-allow);
+  animation: pulse-online 2.5s ease-in-out infinite;
+}
+
+.dot-connecting {
+  background: var(--color-sanitize);
+  animation: pulse-online 1s ease-in-out infinite;
+}
+
+.dot-offline {
+  background: var(--color-block);
+  box-shadow: 0 0 6px var(--color-block);
+}
+
+@keyframes pulse-online {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.status-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.status-error {
+  color: var(--color-block);
+}

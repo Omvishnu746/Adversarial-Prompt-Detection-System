@@ -1,0 +1,154 @@
+/* ============================================================
+   PromptGuard – Global Design System
+   Dark cybersecurity theme with electric blue accent
+   ============================================================ */
+
+/* ── Fonts ──────────────────────────────────────────────────────────────────── */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* ── Colour tokens ─────────────────────────────────────────────────────────── */
+  --color-bg-base:          #0d1117;
+  --color-sidebar-bg:       #0f1623;
+  --color-main-bg:          #0d1117;
+  --color-input-bg:         #141c27;
+  --color-assistant-bubble: #111827;
+  --color-user-bubble:      #0f2035;
+
+  --color-border:           rgba(255, 255, 255, 0.08);
+  --color-hover:            rgba(255, 255, 255, 0.05);
+  --color-active-bg:        rgba(56, 189, 248, 0.08);
+
+  --color-text-primary:     #e2e8f0;
+  --color-text-secondary:   #94a3b8;
+  --color-text-muted:       #64748b;
+
+  /* Accent – electric cyan/blue */
+  --color-accent:           #38bdf8;
+  --color-accent-hover:     #7dd3fc;
+  --color-accent-secondary: #818cf8;
+
+  /* Decision colours */
+  --color-allow:    #22c55e;
+  --color-block:    #ef4444;
+  --color-sanitize: #fb923c;
+
+  /* ── Spacing & radius ──────────────────────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+
+  /* ── Z-layers ──────────────────────────────────────────────────────────────── */
+  --z-sidebar:  100;
+  --z-overlay:  90;
+  --z-header:   80;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar            { width: 6px; height: 6px; }
+::-webkit-scrollbar-track      { background: transparent; }
+::-webkit-scrollbar-thumb      { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.15); }
+
+/* ── Focus visible ──────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Selection ──────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(56, 189, 248, 0.25);
+  color: var(--color-text-primary);
+}
+
+/* ── App layout ─────────────────────────────────────────────────────────────── */
+.app-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Mobile sidebar overlay ─────────────────────────────────────────────────── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: var(--z-overlay);
+  animation: fadeIn 0.2s ease;
+}
+
+.sidebar-overlay.visible {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: var(--z-sidebar);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.sidebar--open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
