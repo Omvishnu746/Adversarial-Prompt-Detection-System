@@ -45,31 +45,31 @@ class PromptResponse(BaseModel):
         ...,
         description="Which detection layer triggered the decision.",
     )
+    explanation: Optional[str] = Field(
+        default=None,
+        description="Human-readable explanation of why the prompt was blocked.",
+    )
+    sanitized_text: Optional[str] = Field(
+        default=None,
+        description="The redacted text if the prompt was SANITIZED.",
+    )
+    rule_result: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Rule engine check details (Phase 1).",
+    )
     semantic_result: Optional[SemanticResponse] = Field(
         default=None,
-        description=(
-            "Semantic similarity check details (Phase 2). "
-            "None when the semantic engine is not initialised."
-        ),
+        description="Semantic similarity check details (Phase 2).",
     )
     classifier_result: Optional[ClassifierResponse] = Field(
         default=None,
-        description=(
-            "DistilBERT classifier details (Phase 3). "
-            "None when the classifier is not loaded."
-        ),
+        description="DistilBERT classifier details (Phase 3).",
     )
     aggregation_result: Optional[Dict[str, Any]] = Field(
         default=None,
-        description=(
-            "Phase 3.5 Risk Aggregation breakdown: rule_score, semantic_score, "
-            "classifier_score, chunk_risk_score, final_risk_score."
-        ),
+        description="Raw risk scores from all detection layers (Phase 3.5).",
     )
     router_result: Optional[RouterResponse] = Field(
         default=None,
-        description=(
-            "Phase 4 Decision Router output: decision, confidence, reason, "
-            "and optional sanitized_text."
-        ),
+        description="Detailed routing outcome (Phase 4).",
     )

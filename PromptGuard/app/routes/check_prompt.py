@@ -186,13 +186,38 @@ async def check_prompt(payload: PromptRequest) -> PromptResponse:
         sanitized=decision == "SANITIZE",
     )
 
-    # ── 9. Respond ────────────────────────────────────────────────────────────
+    # ── 10. Explainability (Sync for Frontend) ───────────────────────────────
+    explanation = None
+    sanitized_text = None
+
+    if decision == "BLOCK":
+        if triggered_layer == "rule":
+            explanation = f"Blocked by Rule Engine. Matched rule: '{rule_result['rule_name']}'."
+        elif triggered_layer == "semantic":
+            explanation = f"Blocked by Semantic Cache. High similarity to known attacks ({semantic_score:.2f})."
+        elif triggered_layer in ("classifier", "aggregation"):
+            from app.auditor.explainability import get_top_tokens
+            # Extract top 5 tokens for the frontend
+            tokens = get_top_tokens(payload.prompt, top_k=5)
+            if tokens:
+                token_list = ", ".join([f"'{t['token']}'" for t in tokens])
+                explanation = f"Blocked by AI Classifier. Suspicious tokens detected: {token_list}."
+            else:
+                explanation = "Blocked by AI Classifier. High adversarial probability detected."
+
+    elif decision == "SANITIZE":
+        sanitized_text = router_out.sanitized_text
+
+    # ── 11. Respond ────────────────────────────────────────────────────────────
     return PromptResponse(
         risk_score=round(risk_score, 4),
         decision=decision,
         triggered_layer=triggered_layer,
+        explanation=explanation,
+        sanitized_text=sanitized_text,
+        rule_result=rule_result,
         semantic_result=semantic_data,
         classifier_result=classifier_data,
-        aggregation_result=agg_raw,  # raw scores — honest signal picture
+        aggregation_result=agg_raw,
         router_result=router_out,
     )
