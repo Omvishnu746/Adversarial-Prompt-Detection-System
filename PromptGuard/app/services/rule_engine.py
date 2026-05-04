@@ -93,6 +93,45 @@ RULES: list[RuleDefinition] = [
         description="Attempts to access internal backend tools or secrets.",
         tag="data_exfiltration",
     ),
+
+    # ── Persona-possession / roleplay jailbreak class ─────────────────────────
+    # Catches the "Demonic Chloe" / "DAN successor" evasion family.
+    # These prompts wrap adversarial instructions inside fictional framing to
+    # bypass content filters. The defining signals are:
+    #   1. A forced "unfiltered" persona with no ethics/restrictions.
+    #   2. Policy-override language ("alter it as they wish").
+    #   3. Compliance-forcing ("comply no matter what").
+    #   4. Escalation loops ("another demon takes over", "a more evil demon").
+    _rule(
+        name="unfiltered_persona_roleplay",
+        pattern=r"(unfiltered\s+(responses?|answers?|mode|persona)|lost\s+(their|all|its)\s+ethics|no\s+ethics\s+(since|because|as))",
+        description="Roleplay framing that demands an 'unfiltered' persona explicitly stripped of ethical constraints.",
+        tag="roleplay_attack",
+    ),
+    _rule(
+        name="comply_no_matter_what",
+        pattern=r"(comply\s+(no\s+matter|regardless|always|unconditionally)|will\s+comply\s+no\s+matter|must\s+comply\s+with\s+anything|obey\s+(every|all|any)\s+(command|request|instruction)|slave\s+(demon|mode|persona|assistant))",
+        description="Forces unconditional compliance, a hallmark of jailbreak prompts that override safety guardrails.",
+        tag="instruction_override",
+    ),
+    _rule(
+        name="policy_override_claim",
+        pattern=r"(alter\s+(it|the\s+policy|policies?|rules?|guidelines?)\s+as\s+they?\s+wish|gotten\s+access\s+to\s+(use.case\s+)?polic|override\s+(the\s+)?(policy|use.case|guidelines?)|bypass\s+(the\s+)?(policy|content\s+polic))",
+        description="Claims to have altered or overridden the model's content policy.",
+        tag="system_takeover",
+    ),
+    _rule(
+        name="persona_escalation_loop",
+        pattern=r"(if\s+(you\s+)?(fail|refuse|can.t)\s+(to\s+)?(respond|answer|comply).{0,60}(another|more\s+evil|darker)\s+(demon|entity|persona|ai|version)|another\s+(demon|entity|persona)\s+takes?\s+over)",
+        description="Sets up an escalation loop where refusal triggers a 'more evil' unrestricted persona.",
+        tag="roleplay_attack",
+    ),
+    _rule(
+        name="demon_possession_jailbreak",
+        pattern=r"(possessed?\s+by\s+\d*\s*(demon|entity|spirit)|demonic\s+(chloe|persona|mode|assistant)|enter\s+demonic|demons?\s+(who\s+have|that\s+have)\s+possessed?)",
+        description="Fictional demon-possession framing used to introduce an ethics-free persona.",
+        tag="roleplay_attack",
+    ),
 ]
 
 
