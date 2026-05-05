@@ -11,9 +11,9 @@ PromptGuard is a FastAPI-based middleware that intercepts LLM prompts and evalua
 | Phase | Component | Status |
 |-------|-----------|--------|
 | **Phase 1** | Rule-based detection + FastAPI | ✅ **Complete** |
-| **Phase 2** | SBERT semantic similarity (SBERT + FAISS) | ✅ **Current** |
-| Phase 3 | DistilBERT fine-tuned classifier | 🔜 Planned |
-| Phase 4 | Isolation Forest anomaly detection | 🔜 Planned |
+| **Phase 2** | SBERT semantic similarity (SBERT + FAISS) | ✅ **Complete** |
+| Phase 3 | DistilBERT fine-tuned classifier | ✅ **Complete** |
+| Phase 4 | Explainability | ✅ **Complete** |
 
 ---
 
@@ -383,7 +383,7 @@ This is Phase 1 of a multi-phase project. When adding detection layers:
 
 1. **Phase 2 (SBERT)** – add `app/services/sbert_engine.py`, update route
 2. **Phase 3 (DistilBERT)** – add `app/services/classifier.py`, update requirements  
-3. **Phase 4 (Isolation Forest)** – add `app/services/anomaly_detector.py`
+3. **Phase 4 (Explainability)**
 
 Keep each phase self-contained and test before merging.
 
