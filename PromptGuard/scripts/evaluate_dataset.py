@@ -99,7 +99,9 @@ def plot_confusion_matrix(y_true, y_pred, layer_name, save_path):
     plt.close()
 
 def main():
-    dataset_path = r"C:\Users\Abc\Adversarial-Prompt-Detection-System\PromptGuard\Prompt_INJECTION_And_Benign_DATASET.jsonl"
+    dataset_path = os.path.join(
+        os.path.dirname(__file__), "..", "Prompt_INJECTION_And_Benign_DATASET.jsonl"
+    )
     reports_dir = os.path.join(os.path.dirname(__file__), "..", "reports")
     os.makedirs(reports_dir, exist_ok=True)
     
