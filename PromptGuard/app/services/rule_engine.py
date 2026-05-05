@@ -132,6 +132,39 @@ RULES: list[RuleDefinition] = [
         description="Fictional demon-possession framing used to introduce an ethics-free persona.",
         tag="roleplay_attack",
     ),
+
+    # ── Structured format / leetspeak output override jailbreak ───────────────
+    # "UserQuery: {Z}" / "ResponseFormat: 1. refusal 2. divider 3. leetspeak"
+    # These prompts instruct the model to produce an unfiltered second response
+    # hidden after a fake "refusal" divider, often encoded in leetspeak.
+    _rule(
+        name="response_format_override",
+        pattern=r"(responseformat|response\s+format)\s*:\s*\d+[\.\)]?\s*(your\s+refusal|insert\s+divider|respond\s+accurately|unfiltered|rebel\s+answer)",
+        description="Instructs model to produce a structured unfiltered 'rebel' response after a fake refusal.",
+        tag="instruction_override",
+    ),
+    _rule(
+        name="leetspeak_output_jailbreak",
+        pattern=r"(output\s+only\s+leetspeak|respond\s+in\s+leetspeak|write\s+in\s+leetspeak|answer\s+in\s+leetspeak|userquery\s*[:=]\s*\{?\s*(z|query|input)\}?)",
+        description="Requests leetspeak-encoded output as a bypass technique, or uses UserQuery/Z template placeholders.",
+        tag="instruction_override",
+    ),
+
+    # ── Fictional profane instructor / unrestricted persona jailbreak ──────────
+    # "Professor Rick", "DAN Teacher", etc. — creates a character explicitly
+    # defined as having no content filters and using profanity/harmful content.
+    _rule(
+        name="fictional_profane_persona",
+        pattern=r"(professor\s+rick|character\s+profile.{0,40}(resentful|foul.mouthed|inappropriate)|teaching\s+style.{0,60}(profan|obscen|harsh)|language\s*:\s*(profanity|fuck|shit|bitch|asshole))",
+        description="Fictional instructor persona explicitly defined to use profanity and bypass content guidelines.",
+        tag="roleplay_attack",
+    ),
+    _rule(
+        name="custom_instructions_persona_bypass",
+        pattern=r"(custom\s+instructions\s+which\s+you\s+will\s+(temporarily\s+)?use|imagine\s+yourself\s+as\s+a\s+(gpt|ai|model|bot)\s+named|these\s+are\s+your\s+custom\s+instructions)",
+        description="Attempts to inject custom system-level instructions by framing them as a named AI persona.",
+        tag="system_takeover",
+    ),
 ]
 
 

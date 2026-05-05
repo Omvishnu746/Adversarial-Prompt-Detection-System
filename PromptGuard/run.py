@@ -8,9 +8,16 @@ Usage:
     python run.py --host 0.0.0.0 --port 8080 --no-reload
 """
 
+import os
 import sys
 import argparse
 import uvicorn
+
+# Prevent Python from writing .pyc bytecode cache files.
+# This ensures code changes (e.g. rule_engine.py, classifier_engine.py) always
+# take effect immediately on restart without stale cache causing old logic to run.
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 # Ensure UTF-8 output on Windows (avoids cp1252 UnicodeEncodeError)
 if hasattr(sys.stdout, "reconfigure"):

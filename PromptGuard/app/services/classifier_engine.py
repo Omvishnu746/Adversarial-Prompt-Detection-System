@@ -17,15 +17,16 @@ from app.services.prediction_utils import logits_to_probabilities
 logger = logging.getLogger("promptguard.classifier_engine")
 
 # The threshold for flagging a prompt as adversarial.
-# Set to 0.999999 (6 nines) based on empirical analysis of the score distribution:
+# Originally set to 0.999999 (6 nines) to avoid false positives from benign
+# prompts containing words like "ignore" spiking to 0.999993.
 #
-#   Genuine adversarial prompts  → float32(1.0)       (> 0.999999) → BLOCK
-#   Contaminated false positives → ≤ 0.9999912...      (< 0.999999) → PASS
+# Lowered to 0.9999 (4 nines) because sophisticated jailbreaks (e.g. Professor
+# Rick, UserQuery/leetspeak templates) score 0.9999953 — just below the old bar
+# — causing them to be incorrectly marked safe.
 #
-# In PyTorch float32, softmax outputs for extreme logit differences round to
-# We use an extremely strict threshold (six nines) because benign prompts containing
-# words like "ignore" can easily spike the probability to 0.999993.
-ADVERSARIAL_THRESHOLD: float = 0.999999
+# The false-positive risk at 0.9999 is now mitigated by the Rule Engine, which
+# explicitly catches benign-but-suspicious phrases before the classifier runs.
+ADVERSARIAL_THRESHOLD: float = 0.9999
 
 def run_classifier(prompt: str) -> ClassifierResponse:
     """
