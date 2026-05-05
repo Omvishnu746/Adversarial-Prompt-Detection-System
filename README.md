@@ -233,7 +233,7 @@ If you use PromptGuard's architectural layout or data engineering strategies in 
 ```bibtex
 @software{promptguard2026,
   title     = {PromptGuard: An Enterprise-Grade Adversarial Prompt Detection Gateway},
-  author    = {Omvishnu746, DivyanshRana07},
+  author    = {Omvishnu746}, {DivyanshRana07},
   year      = {2026},
   url       = {https://github.com/Omvishnu746/Adversarial-Prompt-Detection-System},
   note      = {Low-latency middleware system for LLM security}
