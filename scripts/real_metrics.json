@@ -1,0 +1,13 @@
+{
+  "accuracy": 96.6,
+  "precision": 93.63,
+  "recall": 100.0,
+  "f1_score": 96.71,
+  "fpr": 6.8,
+  "fnr": 0.0,
+  "tn": 233,
+  "fp": 17,
+  "fn": 0,
+  "tp": 250,
+  "total": 500
+}
